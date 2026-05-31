@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shelf — Book Discovery</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1510;
+  --bg2:#221d16;
+  --bg3:#2c251c;
+  --surface:#2e271e;
+  --surface2:#382f24;
+  --border:#4a3f30;
+  --border2:#5c4f3a;
+  --rust:#c8441c;
+  --rust2:#e05a2b;
+  --gold:#c49a1a;
+  --gold2:#dab42a;
+  --cream:#e8dcc8;
+  --cream2:#d4c5a8;
+  --muted:#8a7a62;
+  --dim:#5a4e3c;
+  --tx:#e8dcc8;
+  --shadow:rgba(0,0,0,.45);
+}
+body{background:var(--bg);color:var(--tx);font-family:'Source Sans 3',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── HEADER ── */
+header{
+  background:var(--bg2);
+  border-bottom:2px solid var(--rust);
+  padding:0 2rem;
+  position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;gap:1.5rem;
+  height:64px;
+}
+.logo{
+  font-family:'Libre Baskerville',serif;
+  font-size:1.5rem;color:var(--cream);
+  letter-spacing:-.01em;flex-shrink:0;
+}
+.logo em{color:var(--rust2);font-style:italic}
+
+/* ── SEARCH ── */
+.search-zone{flex:1;position:relative;max-width:580px}
+.search-zone input{
+  width:100%;
+  background:var(--bg3);
+  border:1.5px solid var(--border);
+  border-radius:5px;
+  padding:.62rem 1rem .62rem 2.6rem;
+  font-size:.95rem;font-family:'Source Sans 3',sans-serif;
+  color:var(--cream);outline:none;
+  transition:border-color .2s,background .2s;
+}
+.search-zone input:focus{border-color:var(--rust2);background:var(--surface)}
+.search-zone input::placeholder{color:var(--dim)}
+.s-icon{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none;font-style:normal}
+.btn-reset{
+  background:transparent;border:1.5px solid var(--border);border-radius:5px;
+  padding:.58rem .9rem;color:var(--muted);font-size:.78rem;
+  font-family:'Source Sans 3',sans-serif;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;
+}
+.btn-reset:hover{border-color:var(--cream2);color:var(--cream2)}
+
+/* ── HERO ── */
+.hero{
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);
+  padding:2.2rem 2rem 1.8rem;
+  border-bottom:1px solid var(--border);
+}
+.hero-eyebrow{font-size:.65rem;text-transform:uppercase;letter-spacing:.14em;color:var(--rust2);font-weight:600;margin-bottom:.4rem}
+.hero-title{
+  font-family:'Libre Baskerville',serif;
+  font-size:1.9rem;color:var(--cream);line-height:1.15;margin-bottom:1.4rem;
+}
+.hero-title em{color:var(--rust2);font-style:italic}
+.stats-row{display:flex;gap:2rem;flex-wrap:wrap}
+.stat-val{font-family:'Libre Baskerville',serif;font-size:1.35rem;color:var(--cream);font-weight:700}
+.stat-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.05rem}
+
+/* ── FILTERS ── */
+.filter-bar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:.65rem 2rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;
+  position:sticky;top:64px;z-index:100;
+}
+.filter-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;margin-right:.2rem;flex-shrink:0}
+.chip{
+  background:transparent;border:1.5px solid var(--border);border-radius:3px;
+  padding:.22rem .7rem;font-size:.72rem;font-family:'Source Sans 3',sans-serif;
+  color:var(--muted);cursor:pointer;transition:all .16s;
+}
+.chip:hover{border-color:var(--rust);color:var(--rust)}
+.chip.on{background:var(--rust);border-color:var(--rust);color:#fff;font-weight:600}
+
+/* ── MAIN ── */
+.main{max-width:1280px;margin:0 auto;padding:1.8rem 2rem}
+.sec-head{
+  display:flex;align-items:baseline;gap:.8rem;margin-bottom:1.4rem;
+  padding-bottom:.7rem;border-bottom:1px solid var(--border);
+}
+.sec-title{font-family:'Libre Baskerville',serif;font-size:1.15rem;color:var(--cream)}
+.sec-count{font-size:.78rem;color:var(--muted);font-style:italic}
+.showing{font-size:.7rem;color:var(--dim);margin-left:auto}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:1.1rem}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;
+  overflow:hidden;cursor:pointer;
+  transition:transform .22s,box-shadow .22s,border-color .22s;
+  position:relative;
+}
+.card:hover{
+  transform:translateY(-5px) rotate(.25deg);
+  box-shadow:5px 10px 30px var(--shadow);
+  border-color:var(--rust);z-index:2;
+}
+.card-accent{
+  position:absolute;top:0;left:0;right:0;height:2.5px;
+  background:var(--rust);transform:scaleX(0);transform-origin:left;
+  transition:transform .22s;
+}
+.card:hover .card-accent{transform:scaleX(1)}
+.thumb-wrap{position:relative;height:155px;overflow:hidden;background:var(--surface2)}
+.thumb{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.card:hover .thumb{transform:scale(1.05)}
+.tph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2.8rem;background:linear-gradient(135deg,var(--surface2),var(--bg3))}
+.cat-tag{
+  position:absolute;bottom:.45rem;left:.45rem;
+  background:rgba(26,21,16,.88);color:var(--cream2);
+  font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+  padding:.15rem .45rem;border-radius:2px;
+  max-width:calc(100% - .9rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border-left:2px solid var(--rust);
+}
+.cinfo{padding:.8rem .85rem}
+.ctitle{
+  font-family:'Libre Baskerville',serif;font-size:.85rem;line-height:1.3;
+  margin-bottom:.22rem;color:var(--cream);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cauthor{font-size:.72rem;color:var(--muted);margin-bottom:.45rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.cmeta{display:flex;align-items:center;gap:.6rem}
+.crat{font-size:.7rem;font-weight:600;color:var(--gold2)}
+.crat::before{content:'★ '}
+.cyear{font-size:.65rem;color:var(--dim)}
+
+/* ── PAGINATION ── */
+.pgn{display:flex;gap:.4rem;align-items:center;justify-content:center;margin-top:2rem;flex-wrap:wrap}
+.pb{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:3px;
+  padding:.35rem .78rem;font-size:.76rem;font-family:'Source Sans 3',sans-serif;
+  color:var(--muted);cursor:pointer;transition:all .16s;
+}
+.pb:hover{border-color:var(--rust);color:var(--rust)}
+.pb.on{background:var(--rust);border-color:var(--rust);color:#fff;font-weight:600}
+.pdots{font-size:.76rem;color:var(--dim);padding:0 .3rem}
+
+/* ── OVERLAY ── */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(10,8,5,.82);backdrop-filter:blur(5px);
+  padding:1.5rem 1rem;overflow-y:auto;
+  align-items:flex-start;justify-content:center;
+}
+#overlay.open{display:flex}
+.dcard{
+  background:var(--surface);border:1px solid var(--border2);border-radius:6px;
+  max-width:800px;width:100%;margin:auto;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.6);
+}
+.dhero{
+  display:flex;gap:1.8rem;padding:1.8rem 2rem;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.dhero::after{
+  content:'';position:absolute;right:-60px;bottom:-80px;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,68,28,.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+.dcover{width:115px;height:165px;object-fit:cover;border-radius:3px;flex-shrink:0;box-shadow:3px 5px 18px rgba(0,0,0,.5);background:var(--bg3)}
+.dcph{width:115px;height:165px;border-radius:3px;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:3.2rem;box-shadow:3px 5px 18px rgba(0,0,0,.5)}
+.dmain{flex:1;min-width:0;position:relative;z-index:1}
+.dtitle{font-family:'Libre Baskerville',serif;font-size:1.4rem;line-height:1.2;color:var(--cream);margin-bottom:.3rem}
+.dsub{font-size:.8rem;color:var(--muted);font-style:italic;margin-bottom:.45rem}
+.dauth{font-size:.88rem;color:var(--rust2);font-weight:600;margin-bottom:.9rem}
+.pills{display:flex;flex-wrap:wrap;gap:.35rem}
+.pill{font-size:.68rem;border-radius:2px;padding:.18rem .6rem;font-weight:600;letter-spacing:.02em}
+.pg{background:rgba(196,154,26,.15);color:var(--gold2);border:1px solid rgba(196,154,26,.3)}
+.pp{background:rgba(200,68,28,.15);color:var(--rust2);border:1px solid rgba(200,68,28,.3)}
+.pb2{background:rgba(232,220,200,.06);color:var(--cream2);border:1px solid rgba(232,220,200,.15)}
+.xbtn{
+  position:absolute;top:.85rem;right:.85rem;
+  background:rgba(232,220,200,.06);border:1px solid var(--border);
+  border-radius:50%;width:34px;height:34px;
+  cursor:pointer;color:var(--muted);font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;z-index:10;
+}
+.xbtn:hover{background:var(--rust);border-color:var(--rust);color:#fff}
+.dbody{padding:1.6rem 2rem 2rem}
+.ddesc{
+  font-size:.9rem;line-height:1.85;color:var(--cream2);
+  margin-bottom:1.6rem;padding-left:1rem;
+  border-left:2.5px solid var(--border2);
+}
+.rtitle{
+  font-family:'Libre Baskerville',serif;font-size:.95rem;color:var(--cream);
+  margin-bottom:.9rem;display:flex;align-items:center;gap:.7rem;
+}
+.rtitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:.7rem}
+.rcard{
+  background:var(--bg3);border:1px solid var(--border);border-radius:3px;
+  overflow:hidden;cursor:pointer;transition:transform .18s,border-color .18s;
+}
+.rcard:hover{transform:translateY(-3px);border-color:var(--rust)}
+.rthumb{width:100%;height:95px;object-fit:cover;display:block;background:var(--surface2)}
+.rtph{width:100%;height:95px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:var(--surface2)}
+.rinfo{padding:.48rem .55rem}
+.rtit{font-family:'Libre Baskerville',serif;font-size:.7rem;line-height:1.25;color:var(--cream);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.raut{font-size:.6rem;color:var(--muted);margin-top:.12rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.rrat{font-size:.6rem;color:var(--gold);font-weight:600;margin-top:.18rem}
+.rrat::before{content:'★ '}
+.empty{text-align:center;padding:4rem 2rem;color:var(--muted);grid-column:1/-1}
+.empty-icon{font-size:2.5rem;margin-bottom:.7rem;opacity:.35}
+
+/* ── CARD FADE-IN ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeUp .28s ease both}
+
+@media(max-width:600px){
+  header{padding:0 1rem;height:auto;padding:.7rem 1rem;flex-wrap:wrap}
+  .hero{padding:1.3rem 1rem}
+  .hero-title{font-size:1.45rem}
+  .filter-bar{padding:.55rem 1rem}
+  .main{padding:1.2rem 1rem}
+  .dhero{flex-direction:column}
+  .dcover,.dcph{width:100%;height:150px}
+  .dbody{padding:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">sh<em>e</em>lf</div>
+  <div class="search-zone">
+    <i class="s-icon">⌕</i>
+    <input type="text" id="q" placeholder="Titre, auteur, genre, description..." autocomplete="off">
+  </div>
+  <button class="btn-reset" id="resetBtn">✕ Effacer</button>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">Votre bibliothèque</div>
+  <h1 class="hero-title">Découvrez votre prochain<br>livre <em>coup de cœur</em></h1>
+  <div class="stats-row">
+    <div><div class="stat-val">6 810</div><div class="stat-lbl">Livres</div></div>
+    <div><div class="stat-val" id="sA">—</div><div class="stat-lbl">Auteurs</div></div>
+    <div><div class="stat-val" id="sC">—</div><div class="stat-lbl">Catégories</div></div>
+    <div><div class="stat-val" id="sR">—</div><div class="stat-lbl">Note moyenne</div></div>
+  </div>
+</section>
+
+<div class="filter-bar" id="filtersBar">
+  <span class="filter-lbl">Genre</span>
+</div>
+
+<div class="main">
+  <div class="sec-head">
+    <div class="sec-title" id="stitle">Livres populaires</div>
+    <div class="sec-count" id="scount"></div>
+    <div class="showing" id="sS"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="pgn" id="pgn"></div>
+</div>
+
+<div id="overlay">
+  <div class="dcard">
+    <button class="xbtn" id="xbtn">✕</button>
+    <div class="dhero">
+      <div id="dcov"></div>
+      <div class="dmain">
+        <div class="dtitle" id="dtit"></div>
+        <div class="dsub" id="dsub"></div>
+        <div class="dauth" id="daut"></div>
+        <div class="pills" id="dpills"></div>
+      </div>
+    </div>
+    <div class="dbody">
+      <div class="ddesc" id="ddesc"></div>
+      <div class="rtitle">Vous pourriez aussi aimer</div>
+      <div class="rgrid" id="recs"></div>
+    </div>
+  </div>
+</div>
+
+<script src="bdata.js"></script>
+<script>
+const PP=24;
+let page=1,results=[],mode='top',cat='all';
+let searchTimer=null;
+
+function init(){
+  const auths=new Set(B.map(b=>b.a)).size;
+  const cats=new Set(B.map(b=>b.c).filter(Boolean)).size;
+  const rs=B.map(b=>parseFloat(b.r)).filter(r=>!isNaN(r)&&r>0);
+  const avg=rs.length?(rs.reduce((a,c)=>a+c,0)/rs.length).toFixed(1):'—';
+  document.getElementById('sA').textContent=auths.toLocaleString();
+  document.getElementById('sC').textContent=cats.toLocaleString();
+  document.getElementById('sR').textContent=avg;
+
+  // Build category chips
+  const cc={};
+  B.forEach(b=>{if(b.c)cc[b.c]=(cc[b.c]||0)+1;});
+  const top=Object.entries(cc).sort((a,b)=>b[1]-a[1]).slice(0,12).map(e=>e[0]);
+  const fb=document.getElementById('filtersBar');
+  fb.innerHTML='<span class="filter-lbl">Genre &nbsp;</span><span class="chip on" data-c="all">Tous</span>';
+  top.forEach(c=>{
+    const s=c.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    fb.innerHTML+=`<span class="chip" data-c="${s}">${s}</span>`;
+  });
+  fb.addEventListener('click',e=>{
+    const el=e.target.closest('.chip');if(!el)return;
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+    el.classList.add('on');cat=el.dataset.c;page=1;
+    liveSearch();
+  });
+
+  // Live search — fires on every keystroke with debounce
+  const inp=document.getElementById('q');
+  inp.addEventListener('input',()=>{
+    clearTimeout(searchTimer);
+    searchTimer=setTimeout(()=>{page=1;liveSearch();},180);
+  });
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){reset();}
+  });
+
+  document.getElementById('resetBtn').onclick=reset;
+  document.getElementById('xbtn').onclick=closeD;
+  document.getElementById('overlay').addEventListener('click',e=>{
+    if(e.target===document.getElementById('overlay'))closeD();
+  });
+
+  showTop();
+}
+
+function pool(){return cat==='all'?B:B.filter(b=>b.c===cat);}
+
+function showTop(){
+  mode='top';
+  results=[...pool()].sort((a,b)=>(parseFloat(b.n)||0)-(parseFloat(a.n)||0));
+  render('Livres populaires');
+}
+
+function liveSearch(){
+  const raw=document.getElementById('q').value.trim();
+  if(!raw){showTop();return;}
+  mode='search';
+  const toks=raw.toLowerCase().split(/\s+/).filter(Boolean);
+  const scored=[];
+  pool().forEach(b=>{
+    let s=0;
+    toks.forEach(t=>{
+      if(b.t.toLowerCase().includes(t))s+=5;
+      if(b.a.toLowerCase().includes(t))s+=4;
+      if(b.c.toLowerCase().includes(t))s+=3;
+      if(b.d.toLowerCase().includes(t))s+=1;
+    });
+    if(s>0)scored.push({b,s});
+  });
+  scored.sort((a,c)=>c.s-a.s);
+  results=scored.map(x=>x.b);
+  render(`"${raw}"`);
+}
+
+function reset(){
+  document.getElementById('q').value='';
+  cat='all';
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  document.querySelector('.chip[data-c="all"]').classList.add('on');
+  page=1;showTop();
+}
+
+function render(title){
+  const total=results.length;
+  const start=(page-1)*PP;
+  const slice=results.slice(start,start+PP);
+  document.getElementById('stitle').textContent=title;
+  document.getElementById('scount').textContent=total.toLocaleString()+' livres';
+  document.getElementById('sS').textContent=total>0?`${start+1}–${Math.min(start+PP,total)} sur ${total}`:'';
+
+  const grid=document.getElementById('grid');
+  if(!slice.length){
+    grid.innerHTML='<div class="empty"><div class="empty-icon">📚</div><p>Aucun résultat trouvé</p></div>';
+  } else {
+    grid.innerHTML=slice.map((b,i)=>card(b,i)).join('');
+  }
+  renderPgn(total);
+  grid.onclick=e=>{
+    const c=e.target.closest('.card');if(!c)return;
+    openD(parseInt(c.dataset.i));
+  };
+}
+
+function card(b,animIdx){
+  const img=b.h
+    ?`<img class="thumb" src="${b.h}" loading="lazy" onerror="this.outerHTML='<div class=tph>📖</div>'">`
+    :'<div class="tph">📖</div>';
+  const rat=b.r&&b.r!='nan'?`<span class="crat">${parseFloat(b.r).toFixed(1)}</span>`:'';
+  const yr=b.y&&b.y!='nan'&&b.y!='0.0'?`<span class="cyear">${b.y.replace('.0','')}</span>`:'';
+  const cat=b.c?`<div class="cat-tag">${esc(b.c.length>24?b.c.slice(0,24)+'…':b.c)}</div>`:'';
+  const delay=Math.min(animIdx*0.035,0.5);
+  return `<div class="card" data-i="${b.i}" style="animation-delay:${delay}s">
+    <div class="card-accent"></div>
+    <div class="thumb-wrap">${img}${cat}</div>
+    <div class="cinfo">
+      <div class="ctitle">${esc(b.t)}</div>
+      <div class="cauthor">${esc(b.a)}</div>
+      <div class="cmeta">${rat}${yr}</div>
+    </div>
+  </div>`;
+}
+
+function renderPgn(total){
+  const tp=Math.ceil(total/PP);
+  if(tp<=1){document.getElementById('pgn').innerHTML='';return;}
+  let h='';
+  if(page>1)h+=`<button class="pb" onclick="goP(${page-1})">← Préc.</button>`;
+  const ps=new Set([1,tp,page,page-1,page+1].filter(p=>p>=1&&p<=tp));
+  let prev=0;
+  [...ps].sort((a,b)=>a-b).forEach(p=>{
+    if(prev&&p-prev>1)h+=`<span class="pdots">…</span>`;
+    h+=`<button class="pb ${p===page?'on':''}" onclick="goP(${p})">${p}</button>`;
+    prev=p;
+  });
+  if(page<tp)h+=`<button class="pb" onclick="goP(${page+1})">Suiv. →</button>`;
+  document.getElementById('pgn').innerHTML=h;
+}
+
+function goP(p){
+  page=p;
+  render(document.getElementById('stitle').textContent);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openD(idx){
+  const b=B[idx];
+  const covEl=document.getElementById('dcov');
+  if(b.h){
+    covEl.outerHTML=`<img id="dcov" class="dcover" src="${b.h}" onerror="this.outerHTML='<div id=dcov class=dcph>📖</div>'">`;
+  }else{
+    covEl.outerHTML=`<div id="dcov" class="dcph">📖</div>`;
+  }
+  document.getElementById('dtit').textContent=b.t||'—';
+  document.getElementById('dsub').textContent=b.u||'';
+  document.getElementById('daut').textContent=b.a||'Auteur inconnu';
+
+  let pills='';
+  if(b.r&&b.r!='nan')pills+=`<span class="pill pg">★ ${parseFloat(b.r).toFixed(2)}</span>`;
+  if(b.c)pills+=`<span class="pill pp">${esc(b.c)}</span>`;
+  if(b.y&&b.y!='nan'&&b.y!='0.0')pills+=`<span class="pill pb2">${b.y.replace('.0','')}</span>`;
+  if(b.p&&b.p!='nan'&&b.p!='')pills+=`<span class="pill pb2">${Math.round(parseFloat(b.p))||'?'} pages</span>`;
+  if(b.n&&b.n!='nan')pills+=`<span class="pill pb2">${parseInt(b.n).toLocaleString()} avis</span>`;
+  document.getElementById('dpills').innerHTML=pills;
+  document.getElementById('ddesc').textContent=b.d||'Aucune description disponible.';
+
+  const recIdxs=R[idx]||[];
+  document.getElementById('recs').innerHTML=recIdxs.slice(0,8).map(ri=>{
+    const rb=B[ri];if(!rb)return'';
+    const img=rb.h
+      ?`<img class="rthumb" src="${rb.h}" loading="lazy" onerror="this.outerHTML='<div class=rtph>📖</div>'">`
+      :`<div class="rtph">📖</div>`;
+    const rat=rb.r&&rb.r!='nan'?`<div class="rrat">${parseFloat(rb.r).toFixed(1)}</div>`:'';
+    return `<div class="rcard" onclick="openD(${ri})">${img}<div class="rinfo"><div class="rtit">${esc(rb.t)}</div><div class="raut">${esc(rb.a)}</div>${rat}</div></div>`;
+  }).join('');
+
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeD(){
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+</body>
+</html>
